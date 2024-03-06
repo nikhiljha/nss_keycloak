@@ -111,7 +111,7 @@ fn user_to_passwd(user: keycloak::types::UserRepresentation) -> Option<Passwd> {
     })
 }
 
-#[tokio::main]
+#[tokio::main(flavor = "current_thread")]
 async fn get_all_entries() -> Response<Vec<Passwd>> {
     // Read the user list from the cache at /var/cache/keycloak-nss/passwd
     let cache_file = "/tmp/keycloak-nss-passwd";

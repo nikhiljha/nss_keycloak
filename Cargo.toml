@@ -11,19 +11,19 @@ license = "GPL-3.0-only"
 name = "nss_keycloak"
 crate-type = ["cdylib", "lib"]
 
+[profile.release]
+lto = true
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 anyhow = "1.0.80"
 async-trait = "0.1.77"
-axum = "0.7.4"
-futures = "0.3.30"
-keycloak = { version = "21.0.102", features = ["schemars"] }
+keycloak = { version = "21.0.102" }
 lazy_static = "1.4.0"
 libc = "0.2.153"
 libnss = "0.6.0"
 paste = "1.0.14"
 reqwest = "0.11.24"
 serde_json = "1.0.114"
-tokio = { version = "1.36.0", features = ["full"] }
-toml = "0.8.10"
+tokio = { version = "1.36.0", features = ["rt", "macros"] }
