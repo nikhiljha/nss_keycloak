@@ -10,7 +10,7 @@ use libnss::{
     interop::Response,
     passwd::{Passwd, PasswdHooks},
 };
-use std::fs;
+use std::{fs, os::unix::fs::MetadataExt};
 
 struct KCPassthroughTokenSupplier {
     keycloak_oidc_token: String,
@@ -114,9 +114,15 @@ fn user_to_passwd(user: keycloak::types::UserRepresentation) -> Option<Passwd> {
 #[tokio::main]
 async fn get_all_entries() -> Response<Vec<Passwd>> {
     // Read the user list from the cache at /var/cache/keycloak-nss/passwd
-    let cache_file = "/var/cache/keycloak-nss-passwd";
+    let cache_file = "/tmp/keycloak-nss-passwd";
     let cache_contents = fs::read_to_string(cache_file);
     if let Ok(cache_contents) = cache_contents {
+        // Make sure the cache is owned by the current user
+        let metadata = fs::metadata(cache_file).unwrap();
+        if metadata.uid() != unsafe { libc::getuid() } {
+            eprintln!("Cache file is not owned by the current user, unsafe!");
+            return Response::NotFound;
+        }
         let entries: Vec<Passwd> = cache_contents
             .lines()
             .map(|line| deserialize_passwd_entry(line))
@@ -177,7 +183,7 @@ async fn get_all_entries() -> Response<Vec<Passwd>> {
 }
 
 pub struct KeycloakPasswd;
-libnss_passwd_hooks!(example, KeycloakPasswd);
+libnss_passwd_hooks!(keycloak, KeycloakPasswd);
 
 impl PasswdHooks for KeycloakPasswd {
     fn get_all_entries() -> Response<Vec<Passwd>> {
